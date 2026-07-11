@@ -1,0 +1,266 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f5f8fb;
+  color: #141a2d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  min-width: 360px;
+  width: 420px;
+  margin: 0;
+  padding: 0;
+  background: #f5f8fb;
+}
+
+body {
+  padding: 16px;
+}
+
+.app-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #3f72af 0%, #112d4e 100%);
+  color: white;
+}
+
+.product-label {
+  margin: 0 0 6px;
+  opacity: 0.85;
+  font-size: 0.85rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.status-badge {
+  min-width: 88px;
+  text-align: center;
+  border-radius: 999px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.16);
+  font-size: 0.85rem;
+}
+
+.tab-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.tab-button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #2b3a67;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.14s ease, background-color 0.14s ease;
+}
+
+.tab-button.active {
+  background: #3f72af;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.tab-button:hover {
+  background: #e8effa;
+}
+
+.panels {
+  min-height: 520px;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: grid;
+  gap: 14px;
+}
+
+.panel-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 14px;
+}
+
+.panel-card {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 20px 40px rgba(17, 34, 68, 0.08);
+  overflow-anchor: none;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.summary-card {
+  padding-bottom: 20px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 12px 18px;
+  align-items: center;
+}
+
+.summary-grid div {
+  line-height: 1.5;
+}
+
+.summary-grid .total-label {
+  font-weight: 700;
+  color: #34495e;
+}
+
+.total-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #11357a;
+}
+
+.control-card {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  color: #4b5d79;
+  font-size: 0.85rem;
+}
+
+input, select, textarea, button {
+  font: inherit;
+}
+
+input, select, textarea {
+  width: 100%;
+  border: 1px solid #dbe2ef;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #f9fbff;
+  color: #0f1a3f;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button.primary {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: #3f72af;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.primary:hover {
+  background: #1f4c8b;
+}
+
+button.secondary {
+  border: 1px solid #dbe2ef;
+  background: white;
+  color: #3f72af;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+thead {
+  background: #f1f5fb;
+}
+
+th, td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e8eef8;
+  font-size: 0.88rem;
+}
+
+th {
+  color: #4b5d79;
+  font-weight: 700;
+}
+
+tr:hover td {
+  background: #fbfbff;
+}
+
+.action-button {
+  border: none;
+  background: transparent;
+  color: #3f72af;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.form-card, .settings-card, .list-card {
+  display: grid;
+  gap: 12px;
+}
+
+.form-group {
+  display: grid;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media screen and (max-width: 420px) {
+  body {
+    width: auto;
+  }
+  .panel-row {
+    grid-template-columns: 1fr;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

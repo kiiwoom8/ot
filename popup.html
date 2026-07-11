@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OT Recorder</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="product-label">OT Recorder</p>
+        <h1>월별 OT 관리</h1>
+      </div>
+      <div class="status-badge" id="appStatus">로딩...</div>
+    </header>
+
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-button active" data-tab="summary" role="tab">요약</button>
+      <button class="tab-button" data-tab="records" role="tab">기록</button>
+      <button class="tab-button" data-tab="settings" role="tab">설정</button>
+    </nav>
+
+    <main class="panels">
+      <section id="summary" class="panel active">
+        <div class="panel-row">
+          <div class="panel-card summary-card">
+            <div class="card-header">
+              <strong>월별 요약</strong>
+              <span id="summaryMonthLabel"></span>
+            </div>
+            <div class="summary-grid">
+              <div>기록 수</div><div id="summaryCount">0</div>
+              <div>총 OT 시간</div><div id="summaryHours">0.00시간</div>
+              <div>기본 OT</div><div id="summaryBasePay">0원</div>
+              <div>야간 OT</div><div id="summaryNightPay">0원</div>
+              <div>추가 수당</div><div id="summaryAllowancePay">0원</div>
+              <div class="total-label">총 예상 추가 수당</div><div class="total-value" id="summaryTotalPay">0원</div>
+            </div>
+          </div>
+
+          <div class="panel-card control-card">
+            <label>연도</label>
+            <select id="summaryYear"></select>
+            <label>월</label>
+            <select id="summaryMonth"></select>
+            <button id="refreshSummary">새로고침</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="records" class="panel">
+        <div class="panel-card form-card">
+          <div class="card-header"><strong>OT 기록 추가</strong></div>
+          <form id="recordForm">
+            <div class="form-group"><label>연도</label><select id="recordYear"></select></div>
+            <div class="form-group"><label>월</label><select id="recordMonth"></select></div>
+            <div class="form-group"><label>날짜</label><input type="date" id="recordDate" required /></div>
+            <div class="form-group"><label>시작</label><input type="time" id="recordStart" required /></div>
+            <div class="form-group"><label>종료</label><input type="time" id="recordEnd" required /></div>
+            <div class="form-group"><label>추가 수당(시급)</label><input type="number" id="recordExtra" min="0" step="100" value="0" /></div>
+            <div class="form-group full-width"><label>메모</label><input type="text" id="recordMemo" placeholder="메모를 입력하세요" /></div>
+            <button type="submit" class="primary">저장</button>
+          </form>
+        </div>
+
+        <div class="panel-card list-card">
+          <div class="card-header"><strong>OT 기록 목록</strong></div>
+          <div class="table-wrapper">
+            <table id="recordsTable">
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>기간</th>
+                  <th>시간</th>
+                  <th>합계</th>
+                  <th>메모</th>
+                  <th>동작</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="settings" class="panel">
+        <div class="panel-card settings-card">
+          <div class="card-header"><strong>한 달 설정</strong></div>
+          <form id="profileForm">
+            <div class="form-grid">
+              <div class="form-group"><label>연도</label><select id="profileYear"></select></div>
+              <div class="form-group"><label>월</label><select id="profileMonth"></select></div>
+              <div class="form-group"><label>시급</label><input type="number" id="profileWage" min="0" step="100" required /></div>
+              <div class="form-group"><label>기본 OT 배수</label><input type="number" id="profileOtMultiplier" min="1" step="0.1" required /></div>
+              <div class="form-group"><label>야간 OT 배수</label><input type="number" id="profileNightMultiplier" min="1" step="0.1" required /></div>
+              <div class="form-group"><label>야간 시작</label><input type="time" id="profileNightStart" required /></div>
+              <div class="form-group"><label>야간 종료</label><input type="time" id="profileNightEnd" required /></div>
+              <div class="form-group full-width"><label>메모</label><textarea id="profileNote" rows="3" placeholder="설명 또는 참고 사항"></textarea></div>
+            </div>
+            <button type="submit" class="primary">저장</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

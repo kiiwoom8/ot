@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "OT Recorder",
+  "description": "Track overtime records, allowances, and monthly summaries in a clean Chrome extension.",
+  "version": "1.0.0",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "OT Recorder"
+  }
+}
