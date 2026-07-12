@@ -21,8 +21,6 @@ const elements = {
   summaryAllowancePay: document.getElementById('summaryAllowancePay'),
   summaryTotalPay: document.getElementById('summaryTotalPay'),
   recordForm: document.getElementById('recordForm'),
-  recordYear: document.getElementById('recordYear'),
-  recordMonth: document.getElementById('recordMonth'),
   recordDate: document.getElementById('recordDate'),
   recordStart: document.getElementById('recordStart'),
   recordEnd: document.getElementById('recordEnd'),
@@ -177,8 +175,6 @@ function fillYearMonthSelects() {
   const selects = [
     elements.summaryYear,
     elements.summaryMonth,
-    elements.recordYear,
-    elements.recordMonth,
     elements.profileYear,
     elements.profileMonth,
   ];
@@ -189,16 +185,16 @@ function fillYearMonthSelects() {
     const option = document.createElement('option');
     option.value = year;
     option.textContent = `${year}년`;
-    [elements.summaryYear, elements.recordYear, elements.profileYear].forEach((select) => select.appendChild(option.cloneNode(true)));
+    [elements.summaryYear, elements.profileYear].forEach((select) => select.appendChild(option.cloneNode(true)));
   });
   monthOptions.forEach((month) => {
     const option = document.createElement('option');
     option.value = month;
     option.textContent = `${month}월`;
-    [elements.summaryMonth, elements.recordMonth, elements.profileMonth].forEach((select) => select.appendChild(option.cloneNode(true)));
+    [elements.summaryMonth, elements.profileMonth].forEach((select) => select.appendChild(option.cloneNode(true)));
   });
-  [elements.summaryYear, elements.recordYear, elements.profileYear].forEach((select) => select.value = currentYear);
-  [elements.summaryMonth, elements.recordMonth, elements.profileMonth].forEach((select) => select.value = now.getMonth() + 1);
+  [elements.summaryYear, elements.profileYear].forEach((select) => select.value = currentYear);
+  [elements.summaryMonth, elements.profileMonth].forEach((select) => select.value = now.getMonth() + 1);
 }
 
 function getProfileForCurrentSelection() {
@@ -309,8 +305,6 @@ function dispatchTab(event) {
 function refreshAll() {
   currentYear = Number(elements.summaryYear.value);
   currentMonth = Number(elements.summaryMonth.value);
-  elements.recordYear.value = currentYear;
-  elements.recordMonth.value = currentMonth;
   elements.profileYear.value = currentYear;
   elements.profileMonth.value = currentMonth;
   refreshProfileForm();
@@ -430,9 +424,8 @@ function setupEvents() {
   elements.recordForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
-      const year = Number(elements.recordYear.value);
-      const month = Number(elements.recordMonth.value);
       const workDate = elements.recordDate.value;
+      const [year, month] = workDate.split('-').map(Number);
       const startTime = normalizeTime(elements.recordStart.value);
       const endTime = normalizeTime(elements.recordEnd.value);
       const extraPay = Number(elements.recordExtra.value);
@@ -501,8 +494,6 @@ async function init() {
   currentMonth = now.getMonth() + 1;
   elements.summaryYear.value = currentYear;
   elements.summaryMonth.value = currentMonth;
-  elements.recordYear.value = currentYear;
-  elements.recordMonth.value = currentMonth;
   elements.profileYear.value = currentYear;
   elements.profileMonth.value = currentMonth;
   elements.recordDate.value = now.toISOString().slice(0, 10);
