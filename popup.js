@@ -12,7 +12,6 @@ const elements = {
   settingsPanel: document.getElementById('settings'),
   summaryYear: document.getElementById('summaryYear'),
   summaryMonth: document.getElementById('summaryMonth'),
-  refreshSummary: document.getElementById('refreshSummary'),
   summaryMonthLabel: document.getElementById('summaryMonthLabel'),
   summaryCount: document.getElementById('summaryCount'),
   summaryHours: document.getElementById('summaryHours'),
@@ -120,6 +119,22 @@ function calculateComponents(profile, startTime, endTime, rules, extraPay) {
   return { hours, basePay, nightPay, allowancePay, totalPay };
 }
 
+function getProfileForMonth(year, month) {
+  const key = getMonthKey(year, month);
+  return state.monthProfiles[key] || getDefaultProfile(year, month);
+}
+
+function normalizeStoredRecords() {
+  state.otRecords = state.otRecords.map((record) => {
+    const profile = getProfileForMonth(record.year, record.month);
+    const recalculated = calculateComponents(profile, record.startTime, record.endTime, [], record.extraPay);
+    return {
+      ...record,
+      ...recalculated,
+    };
+  });
+}
+
 function getMonthKey(year, month) {
   return `${year}-${pad(month)}`;
 }
@@ -198,8 +213,7 @@ function fillYearMonthSelects() {
 }
 
 function getProfileForCurrentSelection() {
-  const key = getMonthKey(currentYear, currentMonth);
-  return state.monthProfiles[key] || getDefaultProfile(currentYear, currentMonth);
+  return getProfileForMonth(currentYear, currentMonth);
 }
 
 function refreshProfileForm() {
@@ -221,7 +235,7 @@ function getSummaryData(year, month) {
     return summaryCache;
   }
 
-  const profile = getProfileForCurrentSelection();
+  const profile = getProfileForMonth(year, month);
   const records = state.otRecords.filter((record) => record.year === year && record.month === month);
   const totalHours = records.reduce((sum, record) => sum + record.hours, 0);
   const totalBase = records.reduce((sum, record) => sum + record.basePay, 0);
@@ -405,12 +419,12 @@ function showMessage(text, duration = 2200) {
 function setupEvents() {
   document.querySelector('.tab-bar').addEventListener('click', dispatchTab);
 
-  elements.refreshSummary.addEventListener('click', () => {
-    currentYear = Number(elements.summaryYear.value);
-    currentMonth = Number(elements.summaryMonth.value);
-    refreshProfileForm();
-    updateSummary();
-    showMessage('요약이 업데이트되었습니다.');
+  elements.summaryYear.addEventListener('change', () => {
+    refreshAll();
+  });
+
+  elements.summaryMonth.addEventListener('change', () => {
+    refreshAll();
   });
 
   elements.exportDataButton.addEventListener('click', exportData);
@@ -488,6 +502,7 @@ function setupEvents() {
 async function init() {
   await loadState();
   ensureDefaults();
+  normalizeStoredRecords();
   fillYearMonthSelects();
   const now = new Date();
   currentYear = now.getFullYear();
