@@ -94,7 +94,7 @@ body {
 
 .panel.active {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .panel-row {
@@ -183,6 +183,7 @@ button.primary {
   color: white;
   font-weight: 700;
   cursor: pointer;
+  margin-top: 2px;
 }
 
 button.primary:hover {
@@ -234,6 +235,11 @@ tr:hover td {
 }
 
 .form-card, .settings-card, .list-card {
+  display: grid;
+  gap: 14px;
+}
+
+form {
   display: grid;
   gap: 12px;
 }
