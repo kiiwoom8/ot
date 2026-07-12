@@ -239,6 +239,17 @@ tr:hover td {
   gap: 14px;
 }
 
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: -2px;
+}
+
+.settings-actions button {
+  flex: 0 0 auto;
+}
+
 form {
   display: grid;
   gap: 12px;

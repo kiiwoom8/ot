@@ -89,6 +89,11 @@
       <section id="settings" class="panel">
         <div class="panel-card settings-card">
           <div class="card-header"><strong>월 별 설정</strong></div>
+          <div class="settings-actions">
+            <button type="button" id="exportDataButton" class="secondary">내보내기</button>
+            <button type="button" id="importDataButton" class="secondary">가져오기</button>
+            <input type="file" id="importDataFile" accept="application/json" hidden />
+          </div>
           <form id="profileForm">
             <div class="form-grid">
               <div class="form-group"><label>연도</label><select id="profileYear"></select></div>

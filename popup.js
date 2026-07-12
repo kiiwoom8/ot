@@ -30,6 +30,9 @@ const elements = {
   recordMemo: document.getElementById('recordMemo'),
   recordsTableBody: document.querySelector('#recordsTable tbody'),
   profileForm: document.getElementById('profileForm'),
+  exportDataButton: document.getElementById('exportDataButton'),
+  importDataButton: document.getElementById('importDataButton'),
+  importDataFile: document.getElementById('importDataFile'),
   profileYear: document.getElementById('profileYear'),
   profileMonth: document.getElementById('profileMonth'),
   profileWage: document.getElementById('profileWage'),
@@ -347,6 +350,55 @@ function removeRecord(id) {
   return saveState();
 }
 
+function exportData() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    version: 1,
+    monthProfiles: state.monthProfiles || {},
+    otRecords: state.otRecords || [],
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ot-records-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showMessage('데이터를 내보냈습니다.');
+}
+
+function importDataFromFile(file) {
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const importedProfiles = parsed.monthProfiles && typeof parsed.monthProfiles === 'object' ? parsed.monthProfiles : {};
+      const importedRecords = Array.isArray(parsed.otRecords) ? parsed.otRecords : [];
+
+      if (!window.confirm('현재 데이터를 가져온 데이터로 교체하시겠습니까?')) {
+        return;
+      }
+
+      state.monthProfiles = importedProfiles;
+      state.otRecords = importedRecords;
+      invalidateSummaryCache();
+      await saveState();
+      refreshAll();
+      renderRecords();
+      updateSummary();
+      showMessage('데이터를 가져왔습니다.');
+    } catch (error) {
+      showMessage(error.message || '가져오기 실패', 3200);
+    }
+  };
+  reader.readAsText(file);
+}
+
 function showMessage(text, duration = 2200) {
   elements.status.textContent = text;
   if (duration > 0) {
@@ -365,6 +417,14 @@ function setupEvents() {
     refreshProfileForm();
     updateSummary();
     showMessage('요약이 업데이트되었습니다.');
+  });
+
+  elements.exportDataButton.addEventListener('click', exportData);
+  elements.importDataButton.addEventListener('click', () => elements.importDataFile.click());
+  elements.importDataFile.addEventListener('change', (event) => {
+    const [file] = event.target.files || [];
+    importDataFromFile(file);
+    event.target.value = '';
   });
 
   elements.recordForm.addEventListener('submit', async (event) => {
