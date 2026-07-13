@@ -59,10 +59,12 @@
         <div class="panel-card form-card">
           <div class="card-header"><strong>OT 기록 추가</strong></div>
           <form id="recordForm">
-            <div class="form-group"><label>일</label><input type="number" id="recordDate" min="1" max="31" step="1" required placeholder="일" /></div>
-            <div class="form-group"><label>시작</label><input type="time" id="recordStart" required /></div>
-            <div class="form-group"><label>종료</label><input type="time" id="recordEnd" required /></div>
-            <div class="form-group"><label>추가 수당 (시간 당)</label><input type="number" id="recordExtra" min="0" step="100" value="0" /></div>
+            <div class="form-grid">
+              <div class="form-group"><label>일</label><input type="number" id="recordDate" min="1" max="31" step="1" required placeholder="일" /></div>
+              <div class="form-group"><label>추가 수당 (시간 당)</label><input type="number" id="recordExtra" min="0" step="100" value="0" /></div>
+              <div class="form-group"><label>시작</label><input type="time" id="recordStart" required /></div>
+              <div class="form-group"><label>종료</label><input type="time" id="recordEnd" required /></div>
+            </div>
             <div class="form-group full-width"><label>메모</label><input type="text" id="recordMemo" placeholder="메모를 입력하세요" /></div>
             <button type="submit" class="primary">저장</button>
           </form>
