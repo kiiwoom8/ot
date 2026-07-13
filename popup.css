@@ -307,9 +307,28 @@ tr:hover td {
   transition: background-color 0.14s ease, border-color 0.14s ease;
 }
 
+.settings-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .settings-list-item:hover {
   background: #e8effa;
   border-color: #cbd4ea;
+}
+
+.settings-delete-button {
+  border: none;
+  background: transparent;
+  color: #d64545;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.settings-delete-button:hover {
+  color: #b52929;
 }
 
 .settings-list-empty {

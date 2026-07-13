@@ -33,6 +33,8 @@ const elements = {
   clearRecordsButton: document.getElementById('clearRecordsButton'),
   settingsList: document.getElementById('settingsList'),
   importDataFile: document.getElementById('importDataFile'),
+  recordsYear: document.getElementById('recordsYear'),
+  recordsMonth: document.getElementById('recordsMonth'),
   profileYear: document.getElementById('profileYear'),
   profileWage: document.getElementById('profileWage'),
   profileOtMultiplier: document.getElementById('profileOtMultiplier'),
@@ -188,10 +190,14 @@ function fillYearMonthSelects() {
   const currentYear = now.getFullYear();
   const years = Array.from({ length: 5 }, (_, idx) => currentYear - 2 + idx);
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
-  const yearSelects = [elements.summaryYear, elements.profileYear];
-  elements.summaryMonth.innerHTML = '';
-  elements.summaryYear.innerHTML = '';
-  elements.profileYear.innerHTML = '';
+  const yearSelects = [elements.summaryYear, elements.profileYear, elements.recordsYear];
+  const monthSelects = [elements.summaryMonth, elements.recordsMonth];
+  monthSelects.forEach((select) => {
+    select.innerHTML = '';
+  });
+  yearSelects.forEach((select) => {
+    select.innerHTML = '';
+  });
   years.forEach((year) => {
     const option = document.createElement('option');
     option.value = year;
@@ -202,10 +208,10 @@ function fillYearMonthSelects() {
     const option = document.createElement('option');
     option.value = month;
     option.textContent = `${month}월`;
-    elements.summaryMonth.appendChild(option);
+    monthSelects.forEach((select) => select.appendChild(option.cloneNode(true)));
   });
   yearSelects.forEach((select) => (select.value = currentYear));
-  elements.summaryMonth.value = now.getMonth() + 1;
+  monthSelects.forEach((select) => (select.value = now.getMonth() + 1));
 }
 
 function getProfileForCurrentSelection() {
@@ -232,7 +238,12 @@ function renderSettingsList() {
 
   const items = profileKeys.map((key) => {
     const year = key;
-    return `<button type="button" class="settings-list-item" data-key="${key}">${year}년</button>`;
+    return `
+      <div class="settings-list-item" data-key="${key}">
+        <span>${year}년</span>
+        <button type="button" class="settings-delete-button" data-action="delete" data-key="${key}">삭제</button>
+      </div>
+    `;
   });
   elements.settingsList.innerHTML = items.join('');
 }
@@ -296,9 +307,17 @@ function updateSummary() {
   elements.summaryTotalPay.textContent = formatWon(summary.totalPay);
 }
 
+function getRecordsFilter() {
+  return {
+    year: Number(elements.recordsYear.value) || currentYear,
+    month: Number(elements.recordsMonth.value) || currentMonth,
+  };
+}
+
 function renderRecords() {
+  const { year, month } = getRecordsFilter();
   const records = state.otRecords
-    .filter((record) => record.year === currentYear && record.month === currentMonth)
+    .filter((record) => record.year === year && record.month === month)
     .sort((a, b) => a.workDate.localeCompare(b.workDate) || a.startTime.localeCompare(b.startTime));
   elements.recordsTableBody.innerHTML = '';
 
@@ -342,6 +361,8 @@ function refreshAll() {
   currentYear = Number(elements.summaryYear.value);
   currentMonth = Number(elements.summaryMonth.value);
   elements.profileYear.value = currentYear;
+  elements.recordsYear.value = currentYear;
+  elements.recordsMonth.value = currentMonth;
   refreshProfileForm();
   updateSummary();
   const activePanel = getActivePanelId();
@@ -478,11 +499,25 @@ function setupEvents() {
     updateSummary();
     showMessage('전체 기록이 삭제되었습니다.');
   });
-  elements.settingsList.addEventListener('click', (event) => {
-    const button = event.target.closest('.settings-list-item');
-    if (!button) return;
-    loadProfileSettings(button.dataset.key);
+  elements.settingsList.addEventListener('click', async (event) => {
+    const deleteButton = event.target.closest('[data-action="delete"]');
+    if (deleteButton) {
+      const key = deleteButton.dataset.key;
+      if (!key) return;
+      if (!window.confirm(`${key}년 설정을 삭제하시겠습니까?`)) return;
+      delete state.yearProfiles[key];
+      await saveState();
+      renderSettingsList();
+      showMessage(`${key}년 설정이 삭제되었습니다.`);
+      return;
+    }
+
+    const item = event.target.closest('.settings-list-item');
+    if (!item) return;
+    loadProfileSettings(item.dataset.key);
   });
+  elements.recordsYear.addEventListener('change', () => renderRecords());
+  elements.recordsMonth.addEventListener('change', () => renderRecords());
   elements.importDataFile.addEventListener('change', (event) => {
     const [file] = event.target.files || [];
     importDataFromFile(file);
@@ -492,8 +527,11 @@ function setupEvents() {
   elements.recordForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
-      const workDate = elements.recordDate.value;
-      const [year, month] = workDate.split('-').map(Number);
+      const year = Number(elements.recordsYear.value) || currentYear;
+      const month = Number(elements.recordsMonth.value) || currentMonth;
+      const day = Number(elements.recordDate.value);
+      if (!day || day < 1 || day > 31) throw new Error('일을 1에서 31 사이로 입력하세요.');
+      const workDate = `${year}-${pad(month)}-${pad(day)}`;
       const startTime = normalizeTime(elements.recordStart.value);
       const endTime = normalizeTime(elements.recordEnd.value);
       const extraPay = Number(elements.recordExtra.value);
@@ -581,7 +619,7 @@ async function init() {
   elements.summaryYear.value = currentYear;
   elements.summaryMonth.value = currentMonth;
   elements.profileYear.value = currentYear;
-  elements.recordDate.value = now.toISOString().slice(0, 10);
+  elements.recordDate.value = String(now.getDate());
   elements.recordStart.value = '22:00';
   elements.recordStart.dispatchEvent(new Event('change'));
   await saveState();
