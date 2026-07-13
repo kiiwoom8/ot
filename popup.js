@@ -1,10 +1,11 @@
 const storageDefaults = {
-  monthProfiles: {},
+  yearProfiles: {},
   otRecords: [],
 };
 
 const elements = {
   status: document.getElementById('appStatus'),
+  toast: document.getElementById('toastMessage'),
   tabs: document.querySelectorAll('.tab-button'),
   panels: document.querySelectorAll('.panel'),
   summaryPanel: document.getElementById('summary'),
@@ -29,9 +30,10 @@ const elements = {
   profileForm: document.getElementById('profileForm'),
   exportDataButton: document.getElementById('exportDataButton'),
   importDataButton: document.getElementById('importDataButton'),
+  clearRecordsButton: document.getElementById('clearRecordsButton'),
+  settingsList: document.getElementById('settingsList'),
   importDataFile: document.getElementById('importDataFile'),
   profileYear: document.getElementById('profileYear'),
-  profileMonth: document.getElementById('profileMonth'),
   profileWage: document.getElementById('profileWage'),
   profileOtMultiplier: document.getElementById('profileOtMultiplier'),
   profileNightMultiplier: document.getElementById('profileNightMultiplier'),
@@ -119,14 +121,14 @@ function calculateComponents(profile, startTime, endTime, rules, extraPay) {
   return { hours, basePay, nightPay, allowancePay, totalPay };
 }
 
-function getProfileForMonth(year, month) {
-  const key = getMonthKey(year, month);
-  return state.monthProfiles[key] || getDefaultProfile(year, month);
+function getProfileForYear(year) {
+  const key = getYearKey(year);
+  return state.yearProfiles[key] || getDefaultProfile(year);
 }
 
 function normalizeStoredRecords() {
   state.otRecords = state.otRecords.map((record) => {
-    const profile = getProfileForMonth(record.year, record.month);
+    const profile = getProfileForYear(record.year);
     const recalculated = calculateComponents(profile, record.startTime, record.endTime, [], record.extraPay);
     return {
       ...record,
@@ -135,14 +137,13 @@ function normalizeStoredRecords() {
   });
 }
 
-function getMonthKey(year, month) {
-  return `${year}-${pad(month)}`;
+function getYearKey(year) {
+  return `${year}`;
 }
 
-function getDefaultProfile(year, month) {
+function getDefaultProfile(year) {
   return {
     year,
-    month,
     hourlyWage: 10320,
     otMultiplier: 1.5,
     nightMultiplier: 2.0,
@@ -156,7 +157,7 @@ function loadState() {
   return new Promise((resolve) => {
     chrome.storage.local.get(storageDefaults, (result) => {
       state = {
-        monthProfiles: result.monthProfiles || {},
+        yearProfiles: result.yearProfiles || {},
         otRecords: result.otRecords || [],
       };
       resolve();
@@ -167,7 +168,7 @@ function loadState() {
 function saveState() {
   return new Promise((resolve) => {
     chrome.storage.local.set({
-      monthProfiles: state.monthProfiles,
+      yearProfiles: state.yearProfiles,
       otRecords: state.otRecords,
     }, resolve);
   });
@@ -179,7 +180,7 @@ function invalidateSummaryCache() {
 
 function ensureDefaults() {
   if (!state.otRecords) state.otRecords = [];
-  if (!state.monthProfiles) state.monthProfiles = {};
+  if (!state.yearProfiles) state.yearProfiles = {};
 }
 
 function fillYearMonthSelects() {
@@ -187,33 +188,28 @@ function fillYearMonthSelects() {
   const currentYear = now.getFullYear();
   const years = Array.from({ length: 5 }, (_, idx) => currentYear - 2 + idx);
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
-  const selects = [
-    elements.summaryYear,
-    elements.summaryMonth,
-    elements.profileYear,
-    elements.profileMonth,
-  ];
-  selects.forEach((select) => {
-    select.innerHTML = '';
-  });
+  const yearSelects = [elements.summaryYear, elements.profileYear];
+  elements.summaryMonth.innerHTML = '';
+  elements.summaryYear.innerHTML = '';
+  elements.profileYear.innerHTML = '';
   years.forEach((year) => {
     const option = document.createElement('option');
     option.value = year;
     option.textContent = `${year}년`;
-    [elements.summaryYear, elements.profileYear].forEach((select) => select.appendChild(option.cloneNode(true)));
+    yearSelects.forEach((select) => select.appendChild(option.cloneNode(true)));
   });
   monthOptions.forEach((month) => {
     const option = document.createElement('option');
     option.value = month;
     option.textContent = `${month}월`;
-    [elements.summaryMonth, elements.profileMonth].forEach((select) => select.appendChild(option.cloneNode(true)));
+    elements.summaryMonth.appendChild(option);
   });
-  [elements.summaryYear, elements.profileYear].forEach((select) => select.value = currentYear);
-  [elements.summaryMonth, elements.profileMonth].forEach((select) => select.value = now.getMonth() + 1);
+  yearSelects.forEach((select) => (select.value = currentYear));
+  elements.summaryMonth.value = now.getMonth() + 1;
 }
 
 function getProfileForCurrentSelection() {
-  return getProfileForMonth(currentYear, currentMonth);
+  return getProfileForYear(Number(elements.profileYear.value));
 }
 
 function refreshProfileForm() {
@@ -226,6 +222,28 @@ function refreshProfileForm() {
   elements.profileNote.value = profile.note;
 }
 
+function renderSettingsList() {
+  if (!elements.settingsList) return;
+  const profileKeys = Object.keys(state.yearProfiles).sort((a, b) => b.localeCompare(a));
+  if (!profileKeys.length) {
+    elements.settingsList.innerHTML = '<div class="settings-list-empty">저장된 설정이 없습니다.</div>';
+    return;
+  }
+
+  const items = profileKeys.map((key) => {
+    const year = key;
+    return `<button type="button" class="settings-list-item" data-key="${key}">${year}년</button>`;
+  });
+  elements.settingsList.innerHTML = items.join('');
+}
+
+function loadProfileSettings(key) {
+  const year = Number(key);
+  elements.profileYear.value = year;
+  refreshProfileForm();
+  showMessage(`${year}년 설정을 불러왔습니다.`);
+}
+
 function setStatus(text) {
   elements.status.textContent = text;
 }
@@ -235,8 +253,12 @@ function getSummaryData(year, month) {
     return summaryCache;
   }
 
-  const profile = getProfileForMonth(year, month);
-  const records = state.otRecords.filter((record) => record.year === year && record.month === month);
+  const profile = getProfileForYear(year);
+  const filteredRecords = state.otRecords.filter((record) => record.year === year && record.month === month);
+  const records = filteredRecords.map((record) => ({
+    ...record,
+    ...calculateComponents(profile, record.startTime, record.endTime, [], record.extraPay),
+  }));
   const totalHours = records.reduce((sum, record) => sum + record.hours, 0);
   const totalBase = records.reduce((sum, record) => sum + record.basePay, 0);
   const totalNight = records.reduce((sum, record) => sum + record.nightPay, 0);
@@ -320,7 +342,6 @@ function refreshAll() {
   currentYear = Number(elements.summaryYear.value);
   currentMonth = Number(elements.summaryMonth.value);
   elements.profileYear.value = currentYear;
-  elements.profileMonth.value = currentMonth;
   refreshProfileForm();
   updateSummary();
   const activePanel = getActivePanelId();
@@ -329,9 +350,9 @@ function refreshAll() {
   }
 }
 
-function saveProfile(year, month, profile) {
-  const key = getMonthKey(year, month);
-  state.monthProfiles[key] = profile;
+function saveProfile(year, profile) {
+  const key = getYearKey(year);
+  state.yearProfiles[key] = profile;
   return saveState();
 }
 
@@ -362,7 +383,7 @@ function exportData() {
   const payload = {
     exportedAt: new Date().toISOString(),
     version: 1,
-    monthProfiles: state.monthProfiles || {},
+    yearProfiles: state.yearProfiles || {},
     otRecords: state.otRecords || [],
   };
 
@@ -378,6 +399,12 @@ function exportData() {
   showMessage('데이터를 내보냈습니다.');
 }
 
+function clearAllRecords() {
+  state.otRecords = [];
+  invalidateSummaryCache();
+  return saveState();
+}
+
 function importDataFromFile(file) {
   if (!file) return;
 
@@ -385,18 +412,19 @@ function importDataFromFile(file) {
   reader.onload = async () => {
     try {
       const parsed = JSON.parse(reader.result);
-      const importedProfiles = parsed.monthProfiles && typeof parsed.monthProfiles === 'object' ? parsed.monthProfiles : {};
+      const importedProfiles = parsed.yearProfiles && typeof parsed.yearProfiles === 'object' ? parsed.yearProfiles : {};
       const importedRecords = Array.isArray(parsed.otRecords) ? parsed.otRecords : [];
 
       if (!window.confirm('현재 데이터를 가져온 데이터로 교체하시겠습니까?')) {
         return;
       }
 
-      state.monthProfiles = importedProfiles;
+      state.yearProfiles = importedProfiles;
       state.otRecords = importedRecords;
       invalidateSummaryCache();
       await saveState();
       refreshAll();
+      renderSettingsList();
       renderRecords();
       updateSummary();
       showMessage('데이터를 가져왔습니다.');
@@ -407,8 +435,21 @@ function importDataFromFile(file) {
   reader.readAsText(file);
 }
 
-function showMessage(text, duration = 2200) {
+let toastTimer = null;
+
+function showMessage(text, duration = 2800) {
   elements.status.textContent = text;
+  if (elements.toast) {
+    elements.toast.textContent = text;
+    elements.toast.classList.add('active');
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+    }
+    toastTimer = setTimeout(() => {
+      elements.toast.classList.remove('active');
+      toastTimer = null;
+    }, duration);
+  }
   if (duration > 0) {
     setTimeout(() => {
       elements.status.textContent = '정상';
@@ -429,6 +470,19 @@ function setupEvents() {
 
   elements.exportDataButton.addEventListener('click', exportData);
   elements.importDataButton.addEventListener('click', () => elements.importDataFile.click());
+  elements.clearRecordsButton.addEventListener('click', async () => {
+    if (!window.confirm('정말 모든 OT 기록을 삭제하시겠습니까?')) return;
+    await clearAllRecords();
+    refreshAll();
+    renderRecords();
+    updateSummary();
+    showMessage('전체 기록이 삭제되었습니다.');
+  });
+  elements.settingsList.addEventListener('click', (event) => {
+    const button = event.target.closest('.settings-list-item');
+    if (!button) return;
+    loadProfileSettings(button.dataset.key);
+  });
   elements.importDataFile.addEventListener('change', (event) => {
     const [file] = event.target.files || [];
     importDataFromFile(file);
@@ -444,8 +498,7 @@ function setupEvents() {
       const endTime = normalizeTime(elements.recordEnd.value);
       const extraPay = Number(elements.recordExtra.value);
       const memo = elements.recordMemo.value.trim();
-      const profileKey = getMonthKey(year, month);
-      const profile = state.monthProfiles[profileKey] || getDefaultProfile(year, month);
+      const profile = getProfileForYear(year);
       const recordData = { year, month, workDate, startTime, endTime, extraPay, memo, profile };
       await addRecord(recordData);
       renderRecords();
@@ -454,7 +507,7 @@ function setupEvents() {
       elements.recordExtra.value = '0';
       elements.recordStart.value = '22:00';
       elements.recordStart.dispatchEvent(new Event('change'));
-      showMessage('OT 기록이 저장되었습니다.');
+      showMessage('기록이 저장되었습니다.');
     } catch (error) {
       showMessage(error.message || '입력 값을 확인하세요.', 3200);
     }
@@ -490,10 +543,8 @@ function setupEvents() {
     event.preventDefault();
     try {
       const year = Number(elements.profileYear.value);
-      const month = Number(elements.profileMonth.value);
       const profile = {
         year,
-        month,
         hourlyWage: Number(elements.profileWage.value),
         otMultiplier: Number(elements.profileOtMultiplier.value),
         nightMultiplier: Number(elements.profileNightMultiplier.value),
@@ -501,11 +552,16 @@ function setupEvents() {
         nightEnd: normalizeTime(elements.profileNightEnd.value),
         note: elements.profileNote.value.trim(),
       };
-      await saveProfile(year, month, profile);
-      showMessage('월별 설정이 저장되었습니다.');
-      if (year === currentYear && month === currentMonth) {
+      await saveProfile(year, profile);
+      invalidateSummaryCache();
+      normalizeStoredRecords();
+      await saveState();
+      showMessage('연 별 설정이 저장되었습니다.');
+      renderSettingsList();
+      if (year === currentYear) {
         refreshProfileForm();
         updateSummary();
+        renderRecords();
       }
     } catch (error) {
       showMessage(error.message || '설정 값을 확인하세요.', 3200);
@@ -525,12 +581,12 @@ async function init() {
   elements.summaryYear.value = currentYear;
   elements.summaryMonth.value = currentMonth;
   elements.profileYear.value = currentYear;
-  elements.profileMonth.value = currentMonth;
   elements.recordDate.value = now.toISOString().slice(0, 10);
   elements.recordStart.value = '22:00';
   elements.recordStart.dispatchEvent(new Event('change'));
   await saveState();
   refreshAll();
+  renderSettingsList();
   setStatus('정상');
 }
 

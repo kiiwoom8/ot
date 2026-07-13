@@ -11,7 +11,7 @@
     <header class="app-header">
       <div>
         <p class="product-label">OT Recorder</p>
-        <h1>월별 OT 관리</h1>
+        <h1>월 별 OT 관리</h1>
       </div>
       <div class="status-badge" id="appStatus">로딩...</div>
     </header>
@@ -27,7 +27,7 @@
         <div class="panel-row">
           <div class="panel-card summary-card">
             <div class="card-header">
-              <strong>월별 요약</strong>
+              <strong>월 별 요약</strong>
               <span id="summaryMonthLabel"></span>
             </div>
             <div class="summary-grid">
@@ -85,16 +85,20 @@
 
       <section id="settings" class="panel">
         <div class="panel-card settings-card">
-          <div class="card-header"><strong>월 별 설정</strong></div>
+          <div class="card-header"><strong>연 별 설정</strong></div>
           <div class="settings-actions">
             <button type="button" id="exportDataButton" class="secondary">내보내기</button>
             <button type="button" id="importDataButton" class="secondary">가져오기</button>
+            <button type="button" id="clearRecordsButton" class="secondary">전체기록삭제</button>
             <input type="file" id="importDataFile" accept="application/json" hidden />
+          </div>
+          <div class="settings-list">
+            <div class="list-header">저장된 설정</div>
+            <div id="settingsList" class="settings-list-items"></div>
           </div>
           <form id="profileForm">
             <div class="form-grid">
               <div class="form-group"><label>연도</label><select id="profileYear"></select></div>
-              <div class="form-group"><label>월</label><select id="profileMonth"></select></div>
               <div class="form-group"><label>시급</label><input type="number" id="profileWage" min="0" step="1" required /></div>
               <div class="form-group"><label>주간 OT 배수</label><input type="number" id="profileOtMultiplier" min="1" step="0.1" required /></div>
               <div class="form-group"><label>야간 OT 배수</label><input type="number" id="profileNightMultiplier" min="1" step="0.1" required /></div>
@@ -108,6 +112,7 @@
       </section>
     </main>
   </div>
+  <div class="toast" id="toastMessage" aria-live="polite"></div>
   <script src="popup.js"></script>
 </body>
 </html>
