@@ -453,10 +453,24 @@ function setupEvents() {
       elements.recordForm.reset();
       elements.recordExtra.value = '0';
       elements.recordStart.value = '22:00';
-      elements.recordEnd.value = '06:00';
+      elements.recordStart.dispatchEvent(new Event('change'));
       showMessage('OT 기록이 저장되었습니다.');
     } catch (error) {
       showMessage(error.message || '입력 값을 확인하세요.', 3200);
+    }
+  });
+
+  elements.recordStart.addEventListener('change', (event) => {
+    const startTime = event.target.value;
+    if (startTime) {
+      try {
+        const [hh, mm] = startTime.split(':').map(Number);
+        const endHours = (hh + 1) % 24;
+        const endTime = `${String(endHours).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+        elements.recordEnd.value = endTime;
+      } catch (error) {
+        console.error('시간 설정 오류:', error);
+      }
     }
   });
 
@@ -504,6 +518,7 @@ async function init() {
   ensureDefaults();
   normalizeStoredRecords();
   fillYearMonthSelects();
+  setupEvents();
   const now = new Date();
   currentYear = now.getFullYear();
   currentMonth = now.getMonth() + 1;
@@ -513,10 +528,9 @@ async function init() {
   elements.profileMonth.value = currentMonth;
   elements.recordDate.value = now.toISOString().slice(0, 10);
   elements.recordStart.value = '22:00';
-  elements.recordEnd.value = '06:00';
+  elements.recordStart.dispatchEvent(new Event('change'));
   await saveState();
   refreshAll();
-  setupEvents();
   setStatus('정상');
 }
 
