@@ -118,7 +118,7 @@ function calculateComponents(profile, startTime, endTime, rules, extraPay) {
   const regularOtHours = Math.max(0, hours - nightHours);
   const basePay = profile.hourlyWage * profile.otMultiplier * regularOtHours;
   const nightPay = profile.hourlyWage * profile.nightMultiplier * nightHours;
-  const allowancePay = extraPay * Math.floor(hours);
+  const allowancePay = extraPay * Math.ceil(hours);
   const totalPay = basePay + nightPay + allowancePay;
   return { hours, basePay, nightPay, allowancePay, totalPay };
 }
